@@ -6,10 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Remove="Pages\Dialogs\_AddEditProductDialog.razor" />
-    <Content Remove="wwwroot\qrcode-helper.js" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
@@ -24,15 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SHARED\SHARED.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Pages\Dialogs\_AddEditProductDialog.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="Pages\Dialogs\_AddEditProductDialog.razor" />
-    <_ContentIncludedByDefault Remove="wwwroot\qrcode-helper.js" />
   </ItemGroup>
 
   <ItemGroup>

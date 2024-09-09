@@ -32,7 +32,7 @@ namespace SHARED.Helpers
         public const string SupplierBaseUrl = "api/supplier";
         public const string LocationBaseUrl = "api/location";
 
-        public const string GeneralApi = "http://192.168.0.25:5007/api";
-        public const string GeneralIp = "http://192.168.0.25:5007";
+        public const string GeneralApi = "http://192.168.101.3:5264/api";
+        public const string GeneralIp = "http://192.168.101.3:5264";
     }
 }
