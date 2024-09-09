@@ -5,7 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Server.Data;
 using Server.Repositories;
+using Server.Service;
 using SHARED.Contracts;
+using SHARED.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
@@ -32,6 +34,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AuthDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("AuthConnection") ??
+        throw new InvalidOperationException("Connction String is Not Found"));
+});
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ??
         throw new InvalidOperationException("Connction String is Not Found"));
 });
 
@@ -82,6 +90,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<IUserAccount, AccountRepository>();
+
+builder.Services.AddScoped<DataAccessService>();
+builder.Services.AddScoped<IGenericRepositoryInterface<Location>, LocationRepository>();
+builder.Services.AddScoped<IGenericRepositoryInterface<Product>, ProductRepository>();
+builder.Services.AddScoped<IGenericRepositoryInterface<Categories>, CategoriesRepository>();
+builder.Services.AddScoped<IGenericRepositoryInterface<Supplier>, SupplierRepository>();
+builder.Services.AddScoped<IGenericRepositoryInterface<Checkinout>, CheckinoutRepository>();
 
 //Ending
 

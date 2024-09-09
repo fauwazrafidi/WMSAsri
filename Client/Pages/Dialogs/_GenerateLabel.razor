@@ -1,0 +1,173 @@
+﻿@using System.Net.Http
+@using System.Threading.Tasks
+@using System.Text
+@using System.IO
+@using MudBlazor
+@using QRCoder
+@using SHARED.Models
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<link href="css/productlabel.css" rel="stylesheet" />
+
+<div style="margin: 5px">
+    <div id="tableToPrint" style="height: 6.0cm; width: 9.5cm; border: 1px solid black; padding: 10px; position: relative;">
+        <div style="position: absolute; bottom: 1px; right: 1px;">
+            @if (!string.IsNullOrEmpty(qrCodeDataUrl))
+            {
+                <img src="@qrCodeDataUrl" alt="QR Code" width="100" height="100" />
+            }
+            else
+            {
+                <p>No QR Code generated</p>
+            }
+        </div>
+        <table style="width: 100%; border-collapse: collapse; box-sizing: border-box; " class="table-font">
+            <tr>
+                <th colspan="1" class="no-border-top no-border-left no-border-right xs-text-cell no-wraptext">WMS</th>
+                <th colspan="11" class="no-border-top no-border-left no-border-right right-cell xs-text-cell">Direct Materials Identification Label</th>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Product Id</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="10">@product.Productid</td>
+            </tr>
+            <tr>
+                @{
+                    var SupplierId = product.Supplier_Id;
+                    var SupplierName = supplierList.FirstOrDefault(c => c.SupplierId == SupplierId)?.Name ?? "Unknown Supplier";
+                }
+                <td colspan="1" class="no-border-right">Supplier</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="10">@SupplierName</td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Invoice Number</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="10">@product.invoice_No</td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Product Name</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="10">@product.Name</td>
+            </tr>
+            <tr>
+                @{
+                    var categoryId = product.Category_id;
+                    var categoryName = categoriesList.FirstOrDefault(c => c.Id == categoryId)?.Name ?? "Unknown Category";
+                }
+                <td colspan="1" class="no-border-right">Product Category</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="10">@categoryName</td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Color</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="1" class="custom-width">@product.color</td>
+                <td colspan="9" class="no-border-right no-border-bottom"></td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Date</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="1" class="custom-width">@product.date.Value.Date.ToString("dd/MM/yyyy")</td>
+                <td colspan="9" class="no-border-right no-border-bottom no-border-top"></td>
+            </tr>
+            <tr>
+                @{
+                    var locationId = product.Location_id;
+                    var locationName = locationList.FirstOrDefault(l => l.LocationId == locationId)?.Name ?? "Unknown Location";
+                }
+                <td colspan="1" class="no-border-right">Location</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="1" class="custom-width">@locationName</td>
+                <td colspan="9" class="no-border-right no-border-bottom no-border-top"></td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Quantity (KG)</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="1" class="custom-width">@product.quantity_in_stock</td>
+                <td colspan="9" class="no-border-right no-border-bottom no-border-top"></td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Width (Inch)</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="1" class="custom-width">@product.width</td>
+                <td colspan="9" class="no-border-right no-border-bottom no-border-top"></td>
+            </tr>
+            <tr>
+                <td colspan="1" class="no-border-right">Density (GM/M2)</td>
+                <td colspan="1" class="no-border-left right-cell">:</td>
+                <td colspan="1" class="custom-width">@product.density</td>
+                <td colspan="9" class="no-border-right no-border-bottom no-border-top"></td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+
+<MudDialog>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Success" OnClick="PrintTable">Print</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<script src="printtable.js"></script>
+<script src="qrcode-helper.js"></script>
+
+@code {
+    MudForm form = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Product product { get; set; } = new();
+
+    private List<Categories> categoriesList = new();
+    private List<Supplier> supplierList = new();
+    private List<Location> locationList = new();
+
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+    private string qrCodeDataUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categoriesList = await Http.GetFromJsonAsync<List<Categories>>($"{generalApi}/Categories/all");
+        supplierList = await Http.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Product/all");
+        locationList = await Http.GetFromJsonAsync<List<Location>>($"{generalApi}/Location/all");
+
+        await GenerateQRCode();
+    }
+
+    private async Task GenerateQRCode()
+    {
+        try
+        {
+            HttpResponseMessage response = await Http.GetAsync($"{generalApi}/QrCode/Generate/{product.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                string base64String = await response.Content.ReadAsStringAsync();
+                qrCodeDataUrl = $"data:image/png;base64,{base64String}";
+            }
+            else
+            {
+                qrCodeDataUrl = null;
+                // Handle error, show message, etc.
+            }
+        }
+        catch (Exception ex)
+        {
+            qrCodeDataUrl = null;
+            // Log or handle exception
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task PrintTable()
+    {
+        await JSRuntime.InvokeVoidAsync("printElement", "tableToPrint");
+        MudDialog.Close();
+    }
+}

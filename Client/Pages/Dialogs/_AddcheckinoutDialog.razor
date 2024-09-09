@@ -1,0 +1,91 @@
+﻿@using SHARED.Models
+@inject ISnackbar Snackbar
+@inject HttpClient httpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+            Add @checkinout
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm Model="checkinout2" @ref="form">
+
+            <MudContainer>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => checkinout2.Quantity)" @bind-Value="@checkinout2.Quantity" Label="Quantity" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSelect T="int?" @bind-Value="checkinout2.Location_id" Label="Select Location" id="locationSelect" Class="mud-select">
+                            <MudSelectItem T="int?" Value="null">Select Location</MudSelectItem>
+                            @if (locationList != null && locationList.Any())
+                            {
+                                @foreach (var location in locationList)
+                                {
+                                    <MudSelectItem T="int?" Value="@location.LocationId">@location.Name</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+            </MudContainer>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="Edit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    MudForm form = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Product product { get; set; } = new();
+    [Parameter] public string checkinout { get; set; }
+    private Checkinout checkinout2 { get; set; } = new();
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+    private IEnumerable<Location> locationList = new List<Location>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        checkinout2 = new Checkinout
+            {
+                Productid = product.Id,
+                Scandate = DateTime.Now.ToString(),
+                Quantity = 0,
+                Transaction_type = checkinout,
+            };
+
+        string apiUrl = $"{generalApi}/Location/all";
+        HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
+        locationList = await httpClient.GetFromJsonAsync<List<Location>>(apiUrl);
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Edit()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            HttpResponseMessage response;
+            string apiUrl = $"{generalApi}/Checkinout/add";
+
+            response = await httpClient.PostAsJsonAsync(apiUrl, checkinout2);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Add Success", MudBlazor.Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed", MudBlazor.Severity.Success);
+            }
+            MudDialog.Close();
+        }
+    }
+}

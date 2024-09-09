@@ -1,0 +1,330 @@
+﻿@page "/productpage"
+@using Client.Pages.Dialogs
+@using Microsoft.AspNetCore.Components.Authorization
+@using SHARED.Models
+@using MudBlazor.Services
+
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject HttpClient httpClient
+
+@if (filteredProductList != null)
+{
+    <MudPaper Elevation="2" Style="max-width: 90%; margin: 0 auto;">
+        <div class="d-flex align-center" style="margin: 2%;">
+            <h3 style="margin-top:2%; margin-left:2%">Product</h3>
+            <MudItem xs="3" style="margin-left: 20px;margin-top: 20px;">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Add())" Size="Size.Small">Add Product</MudButton>
+            </MudItem>
+
+            <MudItem xs="3" Class="mr-5">
+                <MudDatePicker Label="Date" Clearable="true" PickerVariant="PickerVariant.Dialog" DateChanged="OnDateChanged" DateFormat="dd MMM yyyy" />
+            </MudItem>
+
+            <MudItem xs="3" Class="mt-4 mr-5">
+                <MudSelect T="int" Label="Select Category" Margin="Margin.Dense" Variant="Variant.Outlined" ValueChanged="OnCategoryChanged">
+                    <MudSelectItem Value="0">Select Category</MudSelectItem>
+                    @if (categoriesList != null && categoriesList.Any())
+                    {
+                        @foreach (var categ in categoriesList)
+                        {
+                            <MudSelectItem Value="@categ.Id">@categ.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="3" Class="mt-4 mr-5">
+                <MudSelect T="int" Margin="Margin.Dense" Label="Select Supplier" Variant="Variant.Outlined" ValueChanged="OnSupplierChanged">
+                    <MudSelectItem Value="0">Select Supplier</MudSelectItem>
+                    @if (supplierList != null && supplierList.Any())
+                    {
+                        @foreach (var supplier in supplierList)
+                        {
+                            <MudSelectItem Value="@supplier.SupplierId">@supplier.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="3" Class="mt-4 mr-5">
+                <MudSelect T="int" Margin="Margin.Dense" Label="Select location" Variant="Variant.Outlined" ValueChanged="OnLocationChanged">
+                    <MudSelectItem Value="0">Select location</MudSelectItem>
+                    @if (locationList != null && locationList.Any())
+                    {
+                        @foreach (var location in locationList)
+                        {
+                            <MudSelectItem Value="@location.LocationId">@location.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="3">
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Value="@_searchString" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </MudItem>
+        </div>
+
+        <MudTable Items="filteredProductList" FixedHeader Height="70vh" Dense>
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Product ID (SKU)</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Invoice Number</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Supplier</MudTh>
+                <MudTh>Location</MudTh>
+                <MudTh>Color</MudTh>
+                <MudTh>Quantity (Kg)</MudTh>
+                <MudTh>Width (Inch)</MudTh>
+                <MudTh>Density (GM/M2)</MudTh>
+                <MudTh>Edit</MudTh>
+                <MudTh>Delete</MudTh>
+                <MudTh>Checkin</MudTh>
+                <MudTh>Checkout</MudTh>
+                <MudTh>Checkinout Detail</MudTh>
+                <MudTh>Lable Generate</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Style="white-space: nowrap;">@context.date.Value.ToString("dd-MM-yyyy")</MudTd>
+                <MudTd>@context.Productid</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.invoice_No</MudTd>
+                <MudTd>@if (categoriesList != null)
+                    {
+                        @categoriesList.FirstOrDefault(x => x.Id == context.Category_id)?.Name
+                    }</MudTd>
+                    <MudTd>
+                        @if (supplierList != null)
+                    {
+                        @supplierList.FirstOrDefault(x => x.SupplierId == context.Supplier_Id)?.Name
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (locationList != null)
+                    {
+                        @locationList.FirstOrDefault(x => x.LocationId == context.Location_id)?.Name
+                    }
+                </MudTd>
+                <MudTd>@context.color</MudTd>
+                <MudTd>@context.quantity_in_stock</MudTd>
+                <MudTd>@context.width</MudTd>
+                <MudTd>@context.density</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="@((e) => Edit(context))">Edit</MudButton>
+                </MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" OnClick="@(()=>Disable(context.Id))">Delete</MudButton>
+                </MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" OnClick="@((e) => checkin(context))">checkin</MudButton>
+                </MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Surface" Size="Size.Small" OnClick="@((e) => checkout(context))">checkout</MudButton>
+                </MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Small" OnClick="@((e) => Detail(context))">Detail</MudButton>
+                </MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" OnClick="@((e) => OpenGenerateLabelDialog(context))">Label</MudButton>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{10, 50, 100}" />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+}
+
+@code {
+    private string _searchString;
+    private readonly MudBlazor.DialogOptions option = new() { BackdropClick = false };
+    private List<Product> productList = new();
+    private List<Product> filteredProductList = new();
+    private List<Categories> categoriesList = new();
+    private List<Supplier> supplierList = new();
+    private IEnumerable<Location> locationList = new List<Location>();
+    private DateTime? selectedDate;
+    private int selectedCategoryId = 0;
+    private int selectedSupplierId = 0;
+    private int selectedLocationId = 0;
+    private DateTime? today = null;
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
+            categoriesList = await httpClient.GetFromJsonAsync<List<Categories>>($"{generalApi}/Categories/all");
+            supplierList = await httpClient.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Product/all");
+            filteredProductList = productList;
+
+            string apiUrl = $"{generalApi}/Location/all";
+            HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                locationList = await response.Content.ReadFromJsonAsync<List<Location>>();
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error fetching locations: {errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Initialization error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task Add()
+    {
+
+        MudBlazor.DialogOptions maxWidth = new MudBlazor.DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<_AddEditProductDialog>("Add Employee", option);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
+            filteredProductList = productList;
+            _searchString = "";
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearch(string text)
+    {
+        _searchString = text;
+        FilterProducts();
+    }
+
+
+    private async Task OnCategoryChanged(int cate)
+    {
+        selectedCategoryId = cate;
+        FilterProducts();
+    }
+
+    private async Task OnSupplierChanged(int sup)
+    {
+        selectedSupplierId = sup;
+        FilterProducts();
+    }
+
+    private async Task OnLocationChanged(int loc)
+    {
+        selectedLocationId = loc;
+        FilterProducts();
+    }
+
+    private void OnDateChanged(DateTime? date)
+    {
+        today = date;
+        FilterProducts();
+    }
+
+    private void FilterProducts()
+    {
+        filteredProductList = productList.Where(p =>
+             (string.IsNullOrWhiteSpace(_searchString) ||
+                 p.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                 p.Productid.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                 p.invoice_No.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                 (categoriesList.FirstOrDefault(c => c.Id == p.Category_id)?.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+
+                 (supplierList.FirstOrDefault(s => s.SupplierId == p.Supplier_Id)?.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+             (selectedCategoryId == 0 || p.Category_id == selectedCategoryId) &&
+             (selectedSupplierId == 0 || p.Supplier_Id == selectedSupplierId) &&
+           (selectedLocationId == 0 || p.Location_id == selectedLocationId) &&
+             (!today.HasValue || p.date.Value.Date == today.Value.Date)
+         ).ToList();
+    }
+
+    private async Task Edit(Product product)
+    {
+        var parameters = new DialogParameters<_AddEditProductDialog>
+        {
+            { x => x.product, product }
+        };
+        var dialog = await DialogService.ShowAsync<_AddEditProductDialog>("Edit Employee", parameters, option);
+        var result = await dialog.Result;
+
+
+        productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
+        filteredProductList = productList;
+        _searchString = "";
+        //In a real world scenario we would reload the data from the source here.
+        StateHasChanged();
+    }
+
+    private async Task OpenGenerateLabelDialog(Product product)
+    {
+        var parameters = new DialogParameters<_GenerateLabel>
+        {
+            { x => x.product, product }
+        };
+
+        var dialog = await DialogService.ShowAsync<_GenerateLabel>("Label Generation", parameters);
+        var result = await dialog.Result;
+
+    }
+
+    private async Task Detail(Product product)
+    {
+        var parameters = new DialogParameters<_CheckinoutDialog>
+        {
+            { x => x.product, product }
+        };
+        var dialog = await DialogService.ShowAsync<_CheckinoutDialog>("Checkinout detail", parameters);
+
+
+    }
+
+    private async Task Disable(int id)
+    {
+        var employee = productList.FirstOrDefault(e => e.Id == id);
+
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning",
+            $"Do you sure want to delete {employee.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await httpClient.DeleteAsync($"{generalApi}/Product/delete{id}");
+            Snackbar.Add($"{employee.Name} Deleted", MudBlazor.Severity.Success);
+            productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
+            filteredProductList = productList;
+            StateHasChanged();
+        }
+    }
+
+    private async Task checkin(Product product)
+    {
+        var parameters = new DialogParameters<_AddcheckinoutDialog>
+        {
+            { x => x.product, product },{x=> x.checkinout, "Check In" }
+        };
+
+        var dialog = await DialogService.ShowAsync<_AddcheckinoutDialog>("Label Generation", parameters);
+        var result = await dialog.Result;
+
+    }
+
+    private async Task checkout(Product product)
+    {
+        var parameters = new DialogParameters<_AddcheckinoutDialog>
+        {
+            { x => x.product, product },{x=> x.checkinout, "Check Out" }
+        };
+
+        var dialog = await DialogService.ShowAsync<_AddcheckinoutDialog>("Label Generation", parameters);
+        var result = await dialog.Result;
+
+    }
+}

@@ -13,6 +13,14 @@
 <div class="container">
     <div class="row">
         <div class="col-md-6">
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                    <p>Welcome, authenticated user!</p>
+                </Authorized>
+                <NotAuthorized>
+                    <p>You are not authenticated. Please <a href="/login">login</a> to access this content.</p>
+                </NotAuthorized>
+            </AuthorizeView>
             <EditForm Model="User" OnValidSubmit="HandleLogin">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
@@ -33,11 +41,8 @@
                                    placeholder="Password"
                                    aria-label="Password"
                                    aria-describedby="Password">
-
-
                         </div>
                     </div>
-
                 </div>
                 <div class="card-footer">
                     <button class="btn btn-primary float-end"
@@ -66,7 +71,7 @@
 
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(token);
-            NavManager.NavigateTo("/", forceLoad: true);
+            NavManager.NavigateTo("/productpage", forceLoad: true);
         }
 
         await js.InvokeVoidAsync("Alert", message);

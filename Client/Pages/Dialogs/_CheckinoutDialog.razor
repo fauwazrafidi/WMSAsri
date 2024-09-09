@@ -1,0 +1,70 @@
+﻿@using SHARED.Models
+@inject ISnackbar Snackbar
+@inject HttpClient httpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+            Checkinout Detail
+        </MudText>
+        <MudText>Product Id (SKU): @product.Productid</MudText>
+        <MudText>Product Name: @product.Name</MudText>
+        <MudText>Invoice Number: @product.invoice_No</MudText>
+        <MudText>Color: @product.color</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTable Items="@CheckinoutList.Where(x=> x.Productid == product.Id).OrderByDescending(x => x.Id)" RowHover="true">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Quantity</MudTh>
+                <MudTh>Transcation type</MudTh>
+                <MudTh>ScanDate</MudTh>
+                <MudTh>LocationId</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+
+                <MudTd>@context.Id</MudTd>
+                <MudTd>@context.Quantity</MudTd>
+                <MudTd>@context.Transaction_type</MudTd>
+                <MudTd>@context.Scandate</MudTd>
+                <MudTd>
+                    @if (LocationList != null)
+                    {
+                        @LocationList.FirstOrDefault(x => x.LocationId == @context.Location_id)?.Name
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    MudForm form = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Product product { get; set; } = new();
+
+    public List<Checkinout> CheckinoutList = new();
+    public List<Location> LocationList = new();
+
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string apiUrl = $"{generalApi}/Checkinout/all";
+        HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
+        CheckinoutList = await httpClient.GetFromJsonAsync<List<Checkinout>>(apiUrl);
+
+        apiUrl = $"{generalApi}/location/all";
+        LocationList = await httpClient.GetFromJsonAsync<List<Location>>(apiUrl);
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

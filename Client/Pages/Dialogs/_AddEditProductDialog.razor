@@ -1,0 +1,269 @@
+﻿@using SHARED.Models
+@using Client.Pages.Validation
+@using TimeZoneConverter
+
+@inject ISnackbar Snackbar
+@inject HttpClient httpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+            Add/Edit Product
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm Model="product" @ref="form" Validation="@(modelValidator.ValidateValue)">
+            <MudContainer>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.Productid)" @bind-Value="@product.Productid" Label="Productid *" />
+
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.invoice_No)" @bind-Value="@product.invoice_No" Label="Invoice Number *" />
+
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.Name)" @bind-Value="@product.Name" Label="Productname *" />
+
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.color)" @bind-Value="@product.color" Label="Color *" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudDatePicker Label="Date" PickerVariant="PickerVariant.Dialog" @bind-Date="@today" DateFormat="dd/MM/yyyy" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.quantity_in_stock)" @bind-Value="@product.quantity_in_stock" Label="Quantity (KG)" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.width)" @bind-Value="@product.width" Label="Width (Inch)" />
+
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField For="@(() => product.density)" @bind-Value="@product.density" Label="Density (GM/M2)" />
+
+                    </MudItem>
+                    @*   <MudItem xs="12">
+                    <label for="categorySelect">Product Category</label>
+                    <select id="categorySelect" @bind="product.Category_id" class="mud-select">
+                    <option value="null">Select Category</option>
+                    @if (categoriesList != null && categoriesList.Any())
+                    {
+                    @foreach (var category in categoriesList)
+                    {
+                    <option value="@category.Id">@category.Name</option>
+                    }
+                    }
+                    </select>
+                    </MudItem> *@
+                    <MudItem xs="12">
+                        <MudAutocomplete T="int?"
+                                         @bind-Value="product.Category_id"
+                                         Label="Select Category"
+                                         Class="mud-autocomplete"
+                                         Required="true"
+                                         RequiredError="Category is required."
+                                         SearchFunc="@SearchCategories"
+                                         ToStringFunc="@(categoryId => categoriesList.FirstOrDefault(c => c.Id == categoryId)?.Name)">
+                        </MudAutocomplete>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudAutocomplete T="int?"
+                                         @bind-Value="product.Supplier_Id"
+                                         Label="Select Supplier"
+                                         Class="mud-autocomplete"
+                                         Required="true"
+                                         RequiredError="Supplier is required."
+                                         SearchFunc="@SearchSuppliers"
+                                         ToStringFunc="@(supplierId => supplierList.FirstOrDefault(s => s.SupplierId == supplierId)?.Name)">
+                        </MudAutocomplete>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudAutocomplete T="int?"
+                                         @bind-Value="product.Location_id"
+                                         Label="Select Location"
+                                         SearchPlaceholder="Search Location"
+                                         Class="mud-autocomplete"
+                                         Required="true"
+                                         SearchFunc="@SearchLocations"
+                                         ToStringFunc="@(locationId => locationList.FirstOrDefault(l => l.LocationId == locationId)?.Name)">
+                        </MudAutocomplete>
+                    </MudItem>
+                </MudGrid>
+            </MudContainer>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="Edit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    MudForm form = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Product product { get; set; } = new();
+    AddEditProductCommandValidator modelValidator = new();
+    public List<Product> productList = new();
+    private List<Categories> categoriesList = new();
+    private List<Supplier> supplierList = new();
+    private IEnumerable<Location> locationList = new List<Location>();
+    private DateTime? today = DateTime.Now;
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+    protected override async Task OnInitializedAsync()
+    {
+        productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
+        categoriesList = await httpClient.GetFromJsonAsync<List<Categories>>($"{generalApi}/Categories/all");
+        supplierList = await httpClient.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Product/all");
+
+        string apiUrl = $"{generalApi}/Location/all";
+        HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
+        locationList = await httpClient.GetFromJsonAsync<List<Location>>(apiUrl);
+        if (product.date == null)
+        {
+            today = DateTime.Now;
+        }
+        else
+        {
+            today = product.date;
+
+        }
+
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Edit()
+    {
+        //Console.WriteLine(product.date.ToString());
+        await form.Validate();
+        if (form.IsValid)
+        {
+            // var checkExistUser = productList.Find(x => x.Productid == product.Productid && x.Id != product.Id)
+            //                     ?? productList.Find(x => x.Name == product.Name && x.Id != product.Id);
+            var checkExistUser = productList.FirstOrDefault(x => x.Productid == product.Productid);
+            if (checkExistUser != null)
+            {
+                if (product.Productid == checkExistUser.Productid)
+                {
+                    Snackbar.Add("Product Id exists!", MudBlazor.Severity.Error);
+                }
+                // else if (product.Name == checkExistUser.Name)
+                // {
+                //     Snackbar.Add("Product Name exists!", MudBlazor.Severity.Error);
+                // }
+                return;
+            }
+
+            var checkIsNew = productList.Find(x => x.Id == product.Id);
+            //product.date = null;
+            //product.invoice_No = "fy";
+            //product.color = "blue";
+            if (checkIsNew != null)
+            {
+                //await productService.Update(product, Constants.ProductBaseUrl);
+                HttpResponseMessage response;
+                string apiUrl = $"{generalApi}/Product/update";
+                //product.date = today.Value.AddDays(1).ToUniversalTime();
+                // Use TimeZoneConverter to get the correct timezone
+                TimeZoneInfo malaysiaTimeZone = TZConvert.GetTimeZoneInfo("Asia/Kuala_Lumpur");
+
+                DateTime malaysiaTime = TimeZoneInfo.ConvertTimeFromUtc(today.Value.ToUniversalTime(), malaysiaTimeZone);
+
+                // Assign it to the product date (assuming you have a product object)
+                product.date = malaysiaTime;
+                response = await httpClient.PutAsJsonAsync(apiUrl, product);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Edit Success", MudBlazor.Severity.Success);
+                }
+                else
+                {
+                    string errorDetails = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine("Edit failed");
+                    Console.WriteLine($"Error details: {errorDetails}");
+                    Snackbar.Add($"Error details: {errorDetails}", MudBlazor.Severity.Error);
+                }
+            }
+            else
+            {
+                HttpResponseMessage response;
+                //await productService.Insert(product, Constants.ProductBaseUrl);
+                string apiUrl = $"{generalApi}/Product/add";
+                //product.date = today.Value.AddDays(1).ToUniversalTime();
+
+                // Use TimeZoneConverter to get the correct timezone
+                TimeZoneInfo malaysiaTimeZone = TZConvert.GetTimeZoneInfo("Asia/Kuala_Lumpur");
+
+                DateTime malaysiaTime = TimeZoneInfo.ConvertTimeFromUtc(today.Value.ToUniversalTime(), malaysiaTimeZone);
+
+                // Assign it to the product date (assuming you have a product object)
+                product.date = malaysiaTime;
+                response = await httpClient.PostAsJsonAsync(apiUrl, product);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Add Success");
+                    Snackbar.Add("Add Success", MudBlazor.Severity.Success);
+
+                }
+                else
+                {
+                    string errorDetails = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine("Add failed");
+                    Console.WriteLine($"Error details: {errorDetails}");
+                    Snackbar.Add($"Error details: {errorDetails}", MudBlazor.Severity.Error);
+                }
+            }
+
+            MudDialog.Close();
+        }
+    }
+
+    private Task<IEnumerable<int?>> SearchCategories(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(categoriesList.Select(c => (int?)c.Id));
+
+        var result = categoriesList
+            .Where(c => c.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(c => (int?)c.Id);
+
+        return Task.FromResult(result);
+    }
+
+    private Task<IEnumerable<int?>> SearchSuppliers(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(supplierList.Select(s => (int?)s.SupplierId));
+
+        var result = supplierList
+            .Where(s => s.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(s => (int?)s.SupplierId);
+
+        return Task.FromResult(result);
+    }
+
+    private Task<IEnumerable<int?>> SearchLocations(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(locationList.Select(l => (int?)l.LocationId));
+
+        var result = locationList
+            .Where(l => l.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(l => (int?)l.LocationId);
+
+        return Task.FromResult(result);
+    }
+
+
+}
