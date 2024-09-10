@@ -29,14 +29,18 @@
                     @if (context.User.Identity.IsAuthenticated)
                     {
                         var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                        <p>Welcome, @role @context.User.Identity.Name</p>
-                        <button class="btn btn-danger" @onclick="Logout"> Logout </button>
+                        <div class="d-flex align-items-center">
+                            <p class="mb-0">Welcome, @role @context.User.Identity.Name</p>
+                            <MudButton Variant="Variant.Filled" Style="margin-left: 5px" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Error" OnClick="Logout">Logout</MudButton>
+                        </div>
                     }
                 </Authorized>
                 <NotAuthorized>
-                    Welcome, Guest
-                    <button class="btn btn-primary" @onclick="SignUp"> SignUp </button>
-                    <button class="btn btn-primary" @onclick="Login"> Login </button>
+                    <div class="d-flex align-items-center">
+                        <p class="mb-0">Welcome, Guest</p>
+                        <MudButton Variant="Variant.Filled" Style="margin-left: 5px" StartIcon="@Icons.Material.Filled.AppRegistration" Color="Color.Primary" OnClick="SignUp">Sign Up</MudButton>
+                        <MudButton Variant="Variant.Filled" Style="margin-left: 5px; margin" StartIcon="@Icons.Material.Filled.Login" Color="Color.Primary" OnClick="Login">Login</MudButton>
+                    </div>
                 </NotAuthorized>
             </Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
         </div>
