@@ -8,7 +8,7 @@
 @inherits LayoutComponentBase
 
 @* Required *@
-<MudThemeProvider Theme="@myCustomTheme" />
+<MudThemeProvider />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -17,7 +17,7 @@
 @* Needed for snackbars *@
 <MudSnackbarProvider />
 
-@* <div class="page">
+<div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -45,9 +45,9 @@
             @Body
         </article>
     </main>
-</div> *@
+</div>
 
-<MudLayout>
+@* <MudLayout>
 
     <MudAppBar Color="Color.Primary">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" Color="Color.Inherit" OnClick="@ToggleDrawer" />
@@ -60,8 +60,10 @@
                 @if (context.User.Identity.IsAuthenticated)
                 {
                     var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                    <p>Welcome, @role @context.User.Identity.Name</p>
-                    <button class="btn btn-danger" @onclick="Logout"> Logout </button>
+                    <div class="d-flex align-items-center">
+                        <p class="mb-0">Welcome, @role @context.User.Identity.Name</p>
+                        <button class="btn btn-danger" @onclick="Logout"> Logout </button>
+                    </div>
                 }
             </Authorized>
             <NotAuthorized>
@@ -77,27 +79,12 @@
     </MudDrawer>
 
     <MudMainContent>
-        @* <Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
-        <Authorized>
-        @if (context.User.Identity.IsAuthenticated)
-        {
-        var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-        <p>Welcome, @role @context.User.Identity.Name</p>
-        <button class="btn btn-danger" @onclick="Logout"> Logout </button>
-        }
-        </Authorized>
-        <NotAuthorized>
-        Welcome, Guest
-        <button class="btn btn-primary" @onclick="SignUp"> SignUp </button>
-        <button class="btn btn-primary" @onclick="Login"> Login </button>
-        </NotAuthorized>
-        </Microsoft.AspNetCore.Components.Authorization.AuthorizeView> *@
         <article class="content px-4">
             @Body
         </article>
     </MudMainContent>
 
-</MudLayout>
+</MudLayout> *@
 
 
 
@@ -141,22 +128,4 @@
         NavManager.NavigateTo("/login");
     }
 
-    // Define your custom theme
-    private MudTheme myCustomTheme = new MudTheme()
-        {
-            PaletteLight = new PaletteLight()
-            {
-                Primary = "#7E6FFF",         // Custom Primary Color
-                Secondary = "#FF4081",       // Pink Accent (complementary secondary color)
-                Tertiary = "#00C853",        // Green Accent (custom tertiary color)
-                Background = "#F4F4F9",      // Light Grey (background)
-                Surface = "#FFFFFF",         // White (surface)
-                AppbarBackground = "#5E56FF",// Slightly Darker Shade of Primary for AppBar
-                TextPrimary = "#212121",     // Dark Grey for Text
-                TextSecondary = "#757575",   // Lighter Grey for Secondary Text
-                ActionDefault = "#E0E0E0",   // Light Grey for Default Actions (buttons, etc.)
-                DrawerBackground = "#FFFFFF",// White for Drawer Background
-                DrawerText = "#7E6FFF"       // Matching Drawer Text Color
-            }
-        };
 }

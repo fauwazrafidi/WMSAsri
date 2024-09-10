@@ -1,4 +1,4 @@
-﻿@* <div class="top-row ps-3 navbar navbar-dark">
+﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Client</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -25,9 +25,9 @@
             </NavLink>
         </div>
     </nav>
-</div> *@
+</div>
 
-@inherits LayoutComponentBase
+@* @inherits LayoutComponentBase
 @using MudBlazor
 
 <MudLayout>
@@ -37,30 +37,28 @@
     </MudAppBar>
 
     <MudNavMenu>
-        @* <MudNavLink Href="counter" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink> *@
-        @* <MudNavLink Href="weather" Icon="@Icons.Custom.Brands.Umbrella">Weather</MudNavLink> *@
-        <MudNavLink Href="products" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Products</MudNavLink>
-        <MudNavLink Href="location" Icon="@Icons.Material.Filled.LocalGroceryStore">Location</MudNavLink>
+        <MudNavLink Href="products" Icon="@Icons.Material.Filled.Home" IconColor="Color.Surface" Match="NavLinkMatch.All">Products</MudNavLink>
+        <MudNavLink Href="location" Icon="@Icons.Material.Filled.LocalGroceryStore" IconColor="Color.Surface">Location</MudNavLink>
     </MudNavMenu>
 
     <MudMainContent>
         @Body
     </MudMainContent>
-</MudLayout>
+</MudLayout> *@
 
 @code {
-    // private bool collapseNavMenu = true;
+    private bool collapseNavMenu = true;
 
-    // private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    // private void ToggleNavMenu()
-    // {
-    //     collapseNavMenu = !collapseNavMenu;
-    // }
-    private bool _drawerOpen = false;
-
-    private void ToggleDrawer()
+    private void ToggleNavMenu()
     {
-        _drawerOpen = !_drawerOpen;
+        collapseNavMenu = !collapseNavMenu;
     }
+    // private bool _drawerOpen = false;
+
+    // private void ToggleDrawer()
+    // {
+    //     _drawerOpen = !_drawerOpen;
+    // }
 }
