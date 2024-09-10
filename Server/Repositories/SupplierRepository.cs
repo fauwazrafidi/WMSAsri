@@ -27,7 +27,7 @@ namespace Server.Repositories
         {
             var checkIfNull = await CheckName(item.Name);
             if (!checkIfNull)
-                return new GeneralApiResponse(false, "General Department already added");
+                return new GeneralApiResponse(false, "Supplier already added");
             appDbContext.Suppliers.Add(item);
             await Commit();
             return Success();

@@ -73,6 +73,7 @@
                                          ToStringFunc="@(categoryId => categoriesList.FirstOrDefault(c => c.Id == categoryId)?.Name)">
                         </MudAutocomplete>
                     </MudItem>
+
                     <MudItem xs="12">
                         <MudAutocomplete T="int?"
                                          @bind-Value="product.Supplier_Id"
@@ -84,6 +85,7 @@
                                          ToStringFunc="@(supplierId => supplierList.FirstOrDefault(s => s.SupplierId == supplierId)?.Name)">
                         </MudAutocomplete>
                     </MudItem>
+
                     <MudItem xs="12">
                         <MudAutocomplete T="int?"
                                          @bind-Value="product.Location_id"
@@ -95,6 +97,9 @@
                                          ToStringFunc="@(locationId => locationList.FirstOrDefault(l => l.LocationId == locationId)?.Name)">
                         </MudAutocomplete>
                     </MudItem>
+
+
+
                 </MudGrid>
             </MudContainer>
         </MudForm>
@@ -120,7 +125,7 @@
     {
         productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
         categoriesList = await httpClient.GetFromJsonAsync<List<Categories>>($"{generalApi}/Categories/all");
-        supplierList = await httpClient.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Product/all");
+        supplierList = await httpClient.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Supplier/all");
 
         string apiUrl = $"{generalApi}/Location/all";
         HttpResponseMessage response = await httpClient.GetAsync(apiUrl);

@@ -158,7 +158,7 @@
         {
             productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
             categoriesList = await httpClient.GetFromJsonAsync<List<Categories>>($"{generalApi}/Categories/all");
-            supplierList = await httpClient.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Product/all");
+            supplierList = await httpClient.GetFromJsonAsync<List<Supplier>>($"{generalApi}/Supplier/all");
             filteredProductList = productList;
 
             string apiUrl = $"{generalApi}/Location/all";
@@ -287,19 +287,42 @@
 
     private async Task Disable(int id)
     {
-        var employee = productList.FirstOrDefault(e => e.Id == id);
+        var product = productList.FirstOrDefault(e => e.Id == id);
 
         bool? result = await DialogService.ShowMessageBox(
             "Warning",
-            $"Do you sure want to delete {employee.Name}?",
+            $"Do you sure want to delete {product.Name}?",
             yesText: "Delete", cancelText: "Cancel");
 
         if (result == true)
         {
-            await httpClient.DeleteAsync($"{generalApi}/Product/delete{id}");
-            Snackbar.Add($"{employee.Name} Deleted", MudBlazor.Severity.Success);
-            productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
-            filteredProductList = productList;
+            try
+            {
+                // Send the delete request to the API
+                var deleteResponse = await httpClient.DeleteAsync($"{generalApi}/Product/delete/{id}");
+
+                // Check if the delete request was successful
+                if (deleteResponse.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"{product.Name} Deleted", MudBlazor.Severity.Success);
+
+                    // Refresh the product list after deletion
+                    productList = await httpClient.GetFromJsonAsync<List<Product>>($"{generalApi}/Product/all");
+                    filteredProductList = productList;
+                }
+                else
+                {
+                    // Notify the user if deletion failed
+                    Snackbar.Add("Failed to delete the product", MudBlazor.Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error or display a message to the user
+                Snackbar.Add($"An error occurred: {ex.Message}", MudBlazor.Severity.Error);
+            }
+
+            // Trigger UI update
             StateHasChanged();
         }
     }
