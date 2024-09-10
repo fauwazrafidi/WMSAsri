@@ -1,0 +1,93 @@
+﻿@using System.Net.Http
+@using System.Threading.Tasks
+@using System.Text
+@using System.IO
+@using QRCoder
+@using SHARED.Models
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<link href="css/locationlabel.css" rel="stylesheet" />
+<div style="margin: 5px">
+    <div id="tableToPrint" class="label-container" style="border: none;">
+        <table>
+            <tr>
+                <td class="position-relative top-aligned no-border-right col-6">
+                    <MudText Style="font-size: 80pt; vertical-align:middle; height: 100%; margin-top: 50px;">@location.Name</MudText>
+
+                </td>
+                <td class="no-border-left col-6">
+                    <div class="qr-code">
+                        @if (!string.IsNullOrEmpty(qrCodeDataUrl))
+                        {
+                            <img src="@qrCodeDataUrl" alt="QR Code" width="150" height="150" />
+                        }
+                        else
+                        {
+                            <p>No QR Code generated</p>
+                        }
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<MudDialog>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Success" OnClick="PrintTable">Print</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<script src="~/printlocationtable.js"></script>
+<script src="~/qrcode-helper.js"></script>
+
+@code {
+    MudForm form = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Location location { get; set; } = new();
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+
+    private string qrCodeDataUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GenerateQRCode();
+    }
+
+    private async Task GenerateQRCode()
+    {
+        try
+        {
+            HttpResponseMessage response = await Http.GetAsync($"{generalApi}/QrCode/locationGenerate/{location.LocationId}");
+            if (response.IsSuccessStatusCode)
+            {
+                string base64String = await response.Content.ReadAsStringAsync();
+                qrCodeDataUrl = $"data:image/png;base64,{base64String}";
+            }
+            else
+            {
+                qrCodeDataUrl = null;
+                // Handle error, show message, etc.
+            }
+        }
+        catch (Exception ex)
+        {
+            qrCodeDataUrl = null;
+            // Log or handle exception
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task PrintTable()
+    {
+        await JSRuntime.InvokeVoidAsync("printLocationElement", "tableToPrint");
+        MudDialog.Close();
+    }
+}

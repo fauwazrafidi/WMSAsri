@@ -1,0 +1,143 @@
+﻿
+.label-container {
+    width: 9.5cm;
+    height: 6.5cm;
+    padding: 0.1cm;
+    border: 1px solid black;
+    font-family: Arial, sans-serif;
+    font-size: 8pt;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    position: relative; /* Add relative positioning */
+}
+
+table {
+    width: 100%; /* Set the width of the table to 100% */
+    height: 100%;
+    border-collapse: collapse; /* Ensures that the borders are not spaced apart */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+th, td {
+    border: 1px solid black; /* Adds a black border to table cells */
+    padding: 2px; /* Adds padding to cells for better readability */
+    text-align: left; /* Aligns text to the left in the cells */
+    /*height: calc(100% / 6);*/ /* Set the height of each cell to 50 pixels */
+    width: cal(100% / 2);
+    vertical-align: top;
+}
+
+th {
+    overflow: visible; /* Ensures overflowed text is visible */
+}
+
+.top-aligned {
+    vertical-align: top;
+}
+
+.width-col-4 {
+    width: calc(100% / 4); /* Set the width of each data cell to a quarter of the table width */
+}
+
+.no-border-top {
+    border-top: none; /* Disables the top border */
+}
+
+.no-border-right {
+    border-right: none; /* Disables the right border */
+}
+
+.no-border-bottom {
+    border-bottom: none; /* Disables the bottom border */
+}
+
+.no-border-left {
+    border-left: none; /* Disables the left border */
+}
+
+.no-wraptext {
+    white-space: nowrap;
+}
+
+.qr-code {
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    /*top: 15px;*/ /*Adjust as needed */
+    right: 5px; /*Adjust as needed */
+}
+
+.position-relative {
+    position: relative; /* Makes this cell the reference point for absolute positioning */
+}
+
+.center-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.right-cell {
+    text-align: right;
+    vertical-align: middle;
+}
+
+.custom-height {
+    height: 75px;
+}
+
+.bottom-aligned-cell {
+    position: absolute;
+    bottom: 2%; /* Adjust to be 2% above the bottom of the label container */
+    left: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+}
+
+.xs-text-cell {
+    font-size: 6pt;
+}
+
+.l-text-cell {
+    font-size: 30pt; /* Adjust the font size as needed */
+}
+
+.xl-text-cell {
+    font-size: 40pt; /* Adjust the font size as needed */
+}
+
+.text-right {
+    position: absolute;
+    top: 15%; /* Adjust as needed */
+    left: 400px; /* Adjust as needed */
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+.text-right-2 {
+    position: absolute;
+    top: 60%; /* Adjust as needed */
+    left: 400px; /* Adjust as needed */
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+th:first-child {
+    font-weight: bold;
+}
+
+td:first-child {
+    font-weight: bold;
+    width: 50px;
+}
+
+/* Adjust the width of the middle column */
+th:nth-child(2),
+td:nth-child(2) {
+    width: 5%; /* Set the width of the middle column */
+    font-weight: bold;
+}

@@ -1,0 +1,131 @@
+﻿@page "/location"
+
+@using System
+@using MudBlazor
+@using SHARED.Models
+@using Client.Pages.Dialogs
+
+@inject HttpClient Http
+@inject IDialogService DialogService
+
+<MudDataGrid T="Location" Striped="true" Bordered="true" Items="@locations" SortMode="SortMode.Multiple" QuickFilter="@_quickFilter" Hideable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Location</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddBox" Color="Color.Primary" Style="margin-right: 5px;" OnClick="OpenAddLocationDialog"></MudButton>
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.Name" Title="Name" Width="20%" />
+        <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
+        <TemplateColumn Title="Action">
+            <CellTemplate>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(async () => await OpenEditLocationDialog(context.Item))"></MudButton>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Secondary" OnClick="@(async () => await DeleteLocation(context.Item.LocationId))"></MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" OnClick="@((e) => OpenGenerateLabelDialog(context.Item))">Label</MudButton>
+            </CellTemplate>
+
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Location" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private readonly MudBlazor.DialogOptions _maxWidth = new() { BackdropClick = false };
+    private IEnumerable<Location> locations = new List<Location>();
+    private string _searchString;
+    private string generalApi = SHARED.Helpers.Constants.GeneralApi;
+    [Inject] ISnackbar snackbarProvider { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        string apiUrl = $"{generalApi}/Location/all";
+        HttpResponseMessage response = await Http.GetAsync(apiUrl);
+        locations = await Http.GetFromJsonAsync<List<Location>>(apiUrl);
+
+    }
+
+    private Func<Location, bool> _quickFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (x.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    };
+
+    private async Task OpenAddLocationDialog()
+    {
+        var dialog = await DialogService.ShowAsync<_AddEditLocationDialog>("Add Location", _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task OpenEditLocationDialog(Location location)
+    {
+        var parameters = new DialogParameters { ["Location"] = location };
+        var dialog = await DialogService.ShowAsync<_AddEditLocationDialog>("Edit Location", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteLocation(int id)
+    {
+        var location = locations.FirstOrDefault(l => l.LocationId == id);
+
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning",
+            $"Do you sure want to delete {location.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            HttpResponseMessage deleteRequest = await Http.DeleteAsync($"{generalApi}/Location/delete/{location.LocationId}");
+
+            if (deleteRequest.IsSuccessStatusCode)
+            {
+                snackbarProvider.Add($"{location.Name} has been deleted", MudBlazor.Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                snackbarProvider.Add($"{location.Name} has failed to be deleted", MudBlazor.Severity.Error);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenGenerateLabelDialog(Location location)
+    {
+        var parameters = new DialogParameters<_GenerateLocationLabel>
+        {
+            { x => x.location, location }
+        };
+
+        var dialog = await DialogService.ShowAsync<_GenerateLocationLabel>("Label Generation", parameters);
+        var result = await dialog.Result;
+
+    }
+}
