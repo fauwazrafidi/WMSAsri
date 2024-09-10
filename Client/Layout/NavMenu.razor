@@ -27,24 +27,6 @@
     </nav>
 </div>
 
-@* @inherits LayoutComponentBase
-@using MudBlazor
-
-<MudLayout>
-    <MudAppBar Color="Color.Primary">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" Color="Color.Inherit" OnClick="@ToggleDrawer" />
-        <span>WMS Asri</span>
-    </MudAppBar>
-
-    <MudNavMenu>
-        <MudNavLink Href="products" Icon="@Icons.Material.Filled.Home" IconColor="Color.Surface" Match="NavLinkMatch.All">Products</MudNavLink>
-        <MudNavLink Href="location" Icon="@Icons.Material.Filled.LocalGroceryStore" IconColor="Color.Surface">Location</MudNavLink>
-    </MudNavMenu>
-
-    <MudMainContent>
-        @Body
-    </MudMainContent>
-</MudLayout> *@
 
 @code {
     private bool collapseNavMenu = true;
@@ -55,10 +37,4 @@
     {
         collapseNavMenu = !collapseNavMenu;
     }
-    // private bool _drawerOpen = false;
-
-    // private void ToggleDrawer()
-    // {
-    //     _drawerOpen = !_drawerOpen;
-    // }
 }

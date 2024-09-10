@@ -47,63 +47,8 @@
     </main>
 </div>
 
-@* <MudLayout>
-
-    <MudAppBar Color="Color.Primary">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" Color="Color.Inherit" OnClick="@ToggleDrawer" />
-        <span>WMS Asri</span>
-
-        <MudSpacer />
-
-        <Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
-            <Authorized>
-                @if (context.User.Identity.IsAuthenticated)
-                {
-                    var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                    <div class="d-flex align-items-center">
-                        <p class="mb-0">Welcome, @role @context.User.Identity.Name</p>
-                        <button class="btn btn-danger" @onclick="Logout"> Logout </button>
-                    </div>
-                }
-            </Authorized>
-            <NotAuthorized>
-                Welcome, Guest
-                <button class="btn btn-primary" @onclick="SignUp"> SignUp </button>
-                <button class="btn btn-primary" @onclick="Login"> Login </button>
-            </NotAuthorized>
-        </Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
-    </MudAppBar>
-
-    <MudDrawer @bind-Open="_drawerOpen" Color="Color.Primary" Elevation="0" ClipMode="DrawerClipMode.Never">
-        <NavMenu />
-    </MudDrawer>
-
-    <MudMainContent>
-        <article class="content px-4">
-            @Body
-        </article>
-    </MudMainContent>
-
-</MudLayout> *@
-
-
 
 @code {
-    // private async Task Logout()
-    // {
-    //     var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
-    //     await customAuthStateProvider.UpdateAuthenticationState(null!);
-    //     NavManager.NavigateTo("/login");
-    // }
-
-    // void SignUp()
-    // {
-    //     NavManager.NavigateTo("/register");
-    // }
-    // void Login()
-    // {
-    //     NavManager.NavigateTo("/login");
-    // }
 
     private bool _drawerOpen = true;
 
