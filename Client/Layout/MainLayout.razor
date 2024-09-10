@@ -26,8 +26,6 @@
         <div class="top-row px-4">
             <Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
                 <Authorized>
-                    @* Welcome,@context.User.Identity. @context.User.Identity.Name
-                    <button class="btn btn-danger" @onclick="Logout"> Logout </button> *@
                     @if (context.User.Identity.IsAuthenticated)
                     {
                         var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;

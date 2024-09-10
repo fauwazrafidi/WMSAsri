@@ -71,10 +71,10 @@
 
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(token);
-            NavManager.NavigateTo("/productpage", forceLoad: true);
+            NavManager.NavigateTo("/product", forceLoad: true);
         }
 
-        await js.InvokeVoidAsync("Alert", message);
+        // await js.InvokeVoidAsync("Alert", message);
         return;
     }
 }
